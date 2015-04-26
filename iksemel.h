@@ -243,7 +243,7 @@ int iks_connect_tcp(iksparser *prs, const char *server, int port);
 int iks_connect_fd(iksparser *prs, int fd);
 int iks_connect_via(iksparser *prs, const char *server, int port, const char *server_name);
 int iks_connect_with(iksparser *prs, const char *server, int port, const char *server_name, ikstransport *trans);
-int iks_connect_async(iksparser *prs, const char *server, int port, void *notify_data, iksAsyncNotify *notify_func);
+int iks_connect_async(iksparser *prs, const char *server, int port, void *notify_data, iksAsyncNotify *notify_func, const char *conn_server);
 int iks_connect_async_with(iksparser *prs, const char *server, int port, const char *server_name, ikstransport *trans, void *notify_data, iksAsyncNotify *notify_func);
 int iks_fd(iksparser *prs);
 int iks_recv(iksparser *prs, int timeout);

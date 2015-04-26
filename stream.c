@@ -374,10 +374,10 @@ int iks_connect_with(iksparser *prs, const char *server, int port, const char *s
 	return iks_send_header(prs, server_name);
 }
 
-int iks_connect_async(iksparser *prs, const char *server, int port, void *notify_data, iksAsyncNotify *notify_func)
+int iks_connect_async(iksparser *prs, const char *server, int port, void *notify_data, iksAsyncNotify *notify_func, const char *conn_server)
 {
 #ifdef USE_DEFAULT_IO
-	return iks_connect_async_with(prs, server, port, server, &iks_default_transport, notify_data, notify_func);
+	return iks_connect_async_with(prs, conn_server ? conn_server : server, port, server, &iks_default_transport, notify_data, notify_func);
 #else
 	return IKS_NET_NOTSUPP;
 #endif
