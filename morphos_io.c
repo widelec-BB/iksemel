@@ -147,8 +147,8 @@ static int morphos_io_connect_async(iksparser *prs, void **socketptr, const char
 				}
 				return IKS_NET_NOTSUPP;
 			}
-			return IKS_NET_DROPPED;
 			CloseSocket(soc);
+			return IKS_NET_DROPPED;
 		}
 		return IKS_NET_NOSOCK;
 	}
