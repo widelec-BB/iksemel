@@ -124,7 +124,7 @@ $(PROJECT): $(OBJS)
 # any other targets
 
 clean:
-	@-delete -rf $(PROJECT)
-	@-delete -rf $(OBJDIR)*.o
+	@-rm -rf $(PROJECT)
+	@-rm -rf $(OBJDIR)*.o
 	@$(TARGET_DONE)
 
