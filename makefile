@@ -16,13 +16,13 @@ VERSION = -D__AMIGADATE__=\"\ \($(shell date "+%d.%m.%Y")\)\ \" -D__COPYRIGHT__=
 
 OUTFILE = libiksemel.a
 
-OUTDIR  = lib/
-OBJDIR  = o/
+OUTDIR  = ./
+OBJDIR  = ./
 
 PROJECT = $(OUTDIR)$(OUTFILE)
 
 # COMPILER #
-CC = gcc
+CC = ppc-morphos-gcc
 CWARNS = -Wall -Wno-pointer-sign
 CDEFS  = $(VERSION) -D__NOLIBBASE__ -DUSE_INLINE_STDARG -D__MORPHOS_NOSTDLIB__
 CFLAGS = -O3 -noixemul
@@ -31,7 +31,7 @@ CLIBS  =
 COMPILE = $(CC) $(TARGET) $(CWARNS) $(CDEFS) $(CFLAGS) $(CLIBS)
 
 # AR #
-AR = ar
+AR = ppc-morphos-ar
 ARPARMS = rs
 
 # target 'all' (default target)
