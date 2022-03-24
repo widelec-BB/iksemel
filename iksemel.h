@@ -441,7 +441,4 @@ void iks_md5(const char *data, char *buf);
 char *iks_base64_decode(const char *buf, size_t *dec_len);
 char *iks_base64_encode(const char *buf, int len);
 
-/****  addons  *****/
-#include "google.h"
-
 #endif  /* IKSEMEL_H */

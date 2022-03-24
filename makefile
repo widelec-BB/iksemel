@@ -107,14 +107,10 @@ $(OBJDIR)urlencode.c.o: urlencode.c common.h finetune.h urlencode.h
 	@$(COMPILE_FILE)
 	@$(COMPILE) -c -o $(OBJDIR)urlencode.c.o urlencode.c
 
-$(OBJDIR)google.c.o: google.c common.h finetune.h iksemel.h http.h google.h
-	@$(COMPILE_FILE)
-	@$(COMPILE) -c -o $(OBJDIR)google.c.o google.c
-
 OBJS = $(OBJDIR)base64.c.o $(OBJDIR)dom.c.o $(OBJDIR)filter.c.o $(OBJDIR)iks.c.o\
  $(OBJDIR)ikstack.c.o $(OBJDIR)morphos_io.c.o $(OBJDIR)jabber.c.o $(OBJDIR)md5.c.o $(OBJDIR)sax.c.o\
  $(OBJDIR)sha.c.o $(OBJDIR)stream.c.o $(OBJDIR)utility.c.o $(OBJDIR)morphos.c.o $(OBJDIR)tls-cyassl.c.o\
- $(OBJDIR)http.c.o $(OBJDIR)urlencode.c.o $(OBJDIR)google.c.o
+ $(OBJDIR)http.c.o $(OBJDIR)urlencode.c.o
 
 # link all file(s)
 $(PROJECT): $(OBJS)
