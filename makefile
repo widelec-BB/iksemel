@@ -25,6 +25,7 @@ PROJECT = $(OUTDIR)$(OUTFILE)
 CC = ppc-morphos-gcc-11
 CWARNS = -Wall
 CDEFS  = $(VERSION) -D__NOLIBBASE__ -DUSE_INLINE_STDARG -D__MORPHOS_NOSTDLIB__
+# -D__DEBUG__
 CFLAGS = -O3 -noixemul -fno-builtin
 CLIBS  =
 
