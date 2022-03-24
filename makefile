@@ -22,16 +22,16 @@ OBJDIR  = ./
 PROJECT = $(OUTDIR)$(OUTFILE)
 
 # COMPILER #
-CC = ppc-morphos-gcc
-CWARNS = -Wall -Wno-pointer-sign
+CC = ppc-morphos-gcc-11
+CWARNS = -Wall
 CDEFS  = $(VERSION) -D__NOLIBBASE__ -DUSE_INLINE_STDARG -D__MORPHOS_NOSTDLIB__
-CFLAGS = -O3 -noixemul
-CLIBS  = 
+CFLAGS = -O3 -noixemul -fno-builtin
+CLIBS  =
 
 COMPILE = $(CC) $(TARGET) $(CWARNS) $(CDEFS) $(CFLAGS) $(CLIBS)
 
 # AR #
-AR = ppc-morphos-ar
+AR = ppc-morphos-gcc-ar-11
 ARPARMS = rs
 
 # target 'all' (default target)

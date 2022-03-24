@@ -18,6 +18,10 @@
 #include <sys/ioctl.h>
 #include <errno.h>
 
+#ifdef errno
+#undef errno
+#endif /* errno */
+
 #define errno Errno()
 #define bzero(b, l) memset(b, 0x00, l)
 #define UNUSED __attribute__((unused))
@@ -28,7 +32,7 @@ static int morphos_io_connect(iksparser *prs, void **socketptr, const char *serv
 {
 	struct sockaddr_in addrname = {0};
 	LONG soc; 
-	struct hostent *he = (struct hostent *)gethostbyname(server);
+	struct hostent *he = (struct hostent *)gethostbyname((const UBYTE*)server);
 
 	*socketptr = (void*) -1;
 
@@ -61,7 +65,7 @@ static int morphos_io_send(void *soc, const char *buf, size_t len)
 
 	while(total < len)
 	{
-		n = send((LONG)soc, buf + total, bytesleft, 0);
+		n = send((LONG)soc, ((const UBYTE*)buf) + total, bytesleft, 0);
 
 		if(n == -1 && Errno() != EINTR)
 			return -1;
@@ -126,7 +130,7 @@ static int morphos_io_connect_async(iksparser *prs, void **socketptr, const char
 					struct sockaddr_in addrname = {0};
 					struct hostent *he;
 
-					if((he = gethostbyname((char*)server)))
+					if((he = gethostbyname((const UBYTE*)server)))
 					{
 						LONG res;
 
