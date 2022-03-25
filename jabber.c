@@ -331,6 +331,7 @@ iks *iks_make_resource_bind(iksid *id)
 	iks *x, *y, *z;
 
 	x = iks_new("iq");
+	iks_insert_attrib(x, "id", "session-bind");
 	iks_insert_attrib(x, "type", "set");
 	y = iks_insert(x, "bind");
 	iks_insert_attrib(y, "xmlns", IKS_NS_XMPP_BIND);
