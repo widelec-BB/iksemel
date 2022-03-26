@@ -94,11 +94,11 @@ iks *iks_copy_within(iks *x, ikstack *s);
 
 enum ikserror
 {
-	IKS_OK = 0,
-	IKS_NOMEM,
-	IKS_BADXML,
+	IKS_AGAIN = -4,
 	IKS_HOOK,
-	IKS_AGAIN
+	IKS_BADXML,
+	IKS_NOMEM,
+	IKS_OK,
 };
 
 enum ikstagtype
@@ -129,7 +129,7 @@ void iks_parser_delete(iksparser *prs);
 
 enum iksfileerror
 {
-	IKS_FILE_NOFILE = 4,
+	IKS_FILE_NOFILE = -4,
 	IKS_FILE_NOACCESS,
 	IKS_FILE_RWERR
 };
@@ -188,6 +188,7 @@ extern ikstransport iks_default_transport;
 struct ikstls_data;
 
 typedef int (iksTlsHandshake)(struct ikstls_data **datap, ikstransport *trans, void *sock);
+typedef int (iksTlsHandshakeAsync)(struct ikstls_data *data);
 typedef int (iksTlsSend)(struct ikstls_data *data, const char *buf, size_t size);
 typedef int (iksTlsRecv)(struct ikstls_data *data, char *buf, size_t size, int timeout);
 typedef void (iksTlsTerminate)(struct ikstls_data *data);
@@ -195,6 +196,7 @@ typedef void (iksTlsTerminate)(struct ikstls_data *data);
 typedef const struct ikstls_struct
 {
 	iksTlsHandshake *handshake;
+	iksTlsHandshakeAsync *handshake_async;
 	iksTlsSend *send;
 	iksTlsRecv *recv;
 	iksTlsTerminate *terminate;
@@ -206,7 +208,7 @@ extern ikstls iks_default_tls;
 
 enum iksneterror
 {
-	IKS_NET_NODNS = 4,
+	IKS_NET_NODNS = -10,
 	IKS_NET_NOSOCK,
 	IKS_NET_NOCONN,
 	IKS_NET_RWERR,
@@ -245,6 +247,7 @@ int iks_connect_via(iksparser *prs, const char *server, int port, const char *se
 int iks_connect_with(iksparser *prs, const char *server, int port, const char *server_name, ikstransport *trans);
 int iks_connect_async(iksparser *prs, const char *server, int port, void *notify_data, iksAsyncNotify *notify_func, const char *conn_server);
 int iks_connect_async_with(iksparser *prs, const char *server, int port, const char *server_name, ikstransport *trans, void *notify_data, iksAsyncNotify *notify_func);
+int iks_connect_async_complete(iksparser *prs);
 int iks_fd(iksparser *prs);
 int iks_recv(iksparser *prs, int timeout);
 int iks_send_header(iksparser *prs, const char *to);

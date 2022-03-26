@@ -24,7 +24,7 @@ PROJECT = $(OUTDIR)$(OUTFILE)
 # COMPILER #
 CC = ppc-morphos-gcc-11
 CWARNS = -Wall
-CDEFS  = $(VERSION) -D__NOLIBBASE__ -DUSE_INLINE_STDARG -D__MORPHOS_NOSTDLIB__
+CDEFS  = $(VERSION) -D__NOLIBBASE__ -DUSE_INLINE_STDARG -D__MORPHOS_NOSTDLIB__ -DHAVE_OPENSSL
 # -D__DEBUG__
 CFLAGS = -O3 -noixemul -fno-builtin
 CLIBS  =
@@ -92,13 +92,9 @@ $(OBJDIR)morphos.c.o: morphos.c
 	@$(COMPILE_FILE)
 	@$(COMPILE) -c -o $(OBJDIR)morphos.c.o morphos.c
 
-$(OBJDIR)tls-none.c.o: tls-none.c
+$(OBJDIR)tls-openssl.c.o: tls-openssl.c common.h iksemel.h
 	@$(COMPILE_FILE)
-	@$(COMPILE) -c -o $(OBJDIR)tls-none.c.o tls-none.c
-
-$(OBJDIR)tls-cyassl.c.o: tls-cyassl.c common.h finetune.h iksemel.h
-	@$(COMPILE_FILE)
-	@$(COMPILE) -c -o $(OBJDIR)tls-cyassl.c.o tls-cyassl.c
+	@$(COMPILE) -c -o $(OBJDIR)tls-openssl.c.o tls-openssl.c
 
 $(OBJDIR)http.c.o: http.c common.h finetune.h iksemel.h http.h
 	@$(COMPILE_FILE)
@@ -110,7 +106,7 @@ $(OBJDIR)urlencode.c.o: urlencode.c common.h finetune.h urlencode.h
 
 OBJS = $(OBJDIR)base64.c.o $(OBJDIR)dom.c.o $(OBJDIR)filter.c.o $(OBJDIR)iks.c.o\
  $(OBJDIR)ikstack.c.o $(OBJDIR)morphos_io.c.o $(OBJDIR)jabber.c.o $(OBJDIR)md5.c.o $(OBJDIR)sax.c.o\
- $(OBJDIR)sha.c.o $(OBJDIR)stream.c.o $(OBJDIR)utility.c.o $(OBJDIR)morphos.c.o $(OBJDIR)tls-cyassl.c.o\
+ $(OBJDIR)sha.c.o $(OBJDIR)stream.c.o $(OBJDIR)utility.c.o $(OBJDIR)morphos.c.o $(OBJDIR)tls-openssl.c.o\
  $(OBJDIR)http.c.o $(OBJDIR)urlencode.c.o
 
 # link all file(s)

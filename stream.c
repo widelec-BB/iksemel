@@ -7,10 +7,11 @@
 #include "common.h"
 #include "iksemel.h"
 
-#define SF_FOREIGN 1
+#define SF_CONNECTED 1
 #define SF_TRY_SECURE 2
 #define SF_SECURE 4
 #define SF_SECURE_AGAIN 8
+#define SF_FOREIGN 16
 
 struct stream_data
 {
@@ -207,8 +208,7 @@ static int tagHook(struct stream_data *data, char *name, char **atts, int type)
 		{
 			if(strcmp(name, "proceed") == 0)
 			{
-				err = iks_default_tls.handshake(&data->tlsdata,
-				                                data->trans, data->sock);
+				err = iks_default_tls.handshake(&data->tlsdata, data->trans, data->sock);
 				if(err == IKS_OK)
 				{
 					data->flags &= (~SF_TRY_SECURE);
@@ -367,9 +367,11 @@ int iks_connect_with(iksparser *prs, const char *server, int port, const char *s
 	}
 
 	ret = trans->connect(prs, &data->sock, server, port);
-	if(ret) return ret;
+	if(ret)
+		return ret;
 
 	data->trans = trans;
+	data->flags |= SF_CONNECTED;
 
 	return iks_send_header(prs, server_name);
 }
@@ -398,10 +400,29 @@ int iks_connect_async_with(iksparser *prs, const char *server, int port, const c
 	}
 
 	ret = trans->connect_async(prs, &data->sock, server, server_name, port, notify_data, notify_func);
-	if(ret) return ret;
+	if(ret)
+		return ret;
 
 	data->trans = trans;
 	data->server = server_name;
+
+	return IKS_OK;
+}
+
+int iks_connect_async_complete(iksparser *prs)
+{
+	struct stream_data *data = iks_user_data(prs);
+
+	if(!data->trans)
+		return IKS_NET_NOSOCK;
+
+	if(!(data->flags & SF_CONNECTED))
+	{
+		if(iks_send_header(data->prs, data->server) != IKS_OK)
+			return IKS_NET_RWERR;
+
+		data->flags |= SF_CONNECTED;
+	}
 
 	return IKS_OK;
 }
@@ -437,48 +458,54 @@ int iks_fd(iksparser *prs)
 int iks_recv(iksparser *prs, int timeout)
 {
 	struct stream_data *data = iks_user_data(prs);
-	int len, ret;
+	int len = 0, ret;
+
+	if(!(data->flags & SF_CONNECTED))
+		return IKS_NET_NOSOCK;
 
 	while(1)
 	{
 		if(data->flags & SF_SECURE_AGAIN)
 		{
-			len = iks_default_tls.send(data->tlsdata, NULL, 0);
-
-			if(len >= 0)
+			ret = iks_default_tls.handshake_async(data->tlsdata);
+			if(ret == IKS_OK)
 			{
 				data->flags &= (~SF_SECURE_AGAIN);
 				data->flags |= SF_SECURE;
-				if((len = iks_send_header(data->prs, data->server) != IKS_OK))
-				{
-					data->flags &= (~SF_SECURE);
-					data->flags |= SF_SECURE_AGAIN;
-				}
-				len = 0;
+				if((ret = iks_send_header(data->prs, data->server)) != IKS_OK)
+					return IKS_NET_RWERR;
 			}
+			else if(ret == IKS_AGAIN)
+				return IKS_OK;
+			else
+				return IKS_NET_RWERR;
 		}
-		else if(data->flags & SF_SECURE)
-		{
-			len = iks_default_tls.recv(data->tlsdata, data->buf,
-			                           NET_IO_BUF_SIZE - 1, timeout);
-		}
+
+		if(data->flags & SF_SECURE)
+			len = iks_default_tls.recv(data->tlsdata, data->buf, NET_IO_BUF_SIZE - 1, timeout);
 		else
-		{
 			len = data->trans->recv(data->sock, data->buf, NET_IO_BUF_SIZE - 1, timeout);
-		}
-		if(len < 0) return IKS_NET_RWERR;
-		if(len == 0) break;
+
+		if(len < 0)
+			return IKS_NET_RWERR;
+		if(len == 0)
+			break;
+
 		data->buf[len] = '\0';
-		if(data->logHook) data->logHook(data->user_data, data->buf, len, 1);
+
+		if(data->logHook)
+			data->logHook(data->user_data, data->buf, len, 1);
+
 		ret = iks_parse(prs, data->buf, len, 0);
-		if(ret != IKS_OK) return ret;
-		if(!data->trans)
-		{
-			/* stream hook called iks_disconnect */
+		if(ret != IKS_OK)
+			return ret;
+
+		if(!data->trans) /* stream hook called iks_disconnect */
 			return IKS_NET_NOCONN;
-		}
+
 		timeout = 0;
 	}
+
 	return IKS_OK;
 }
 
@@ -490,19 +517,28 @@ int iks_send_header(iksparser *prs, const char *to)
 
 	len = 91 + strlen(data->name_space) + 6 + strlen(to) + 16 + 1;
 	msg = iks_malloc(len);
-	if(!msg) return IKS_NOMEM;
+	if(!msg)
+		return IKS_NOMEM;
+
 	sprintf(msg, "<?xml version='1.0'?>"
 	        "<stream:stream xmlns:stream='http://etherx.jabber.org/streams' xmlns='"
 	        "%s' to='%s' version='1.0'>", data->name_space, to);
 	err = iks_send_raw(prs, msg);
 	iks_free(msg);
-	if(err) return err;
+	if(err)
+		return err;
 	data->server = to;
+
 	return IKS_OK;
 }
 
 int iks_send(iksparser *prs, iks *x)
 {
+	struct stream_data *data = iks_user_data(prs);
+
+	if(!(data->flags & SF_CONNECTED))
+		return IKS_NET_NOSOCK;
+
 	return iks_send_raw(prs, iks_string(iks_stack(x), x));
 }
 
@@ -513,15 +549,20 @@ int iks_send_raw(iksparser *prs, const char *xmlstr)
 
 	if(data->flags & SF_SECURE)
 	{
-		if(iks_default_tls.send(data->tlsdata, xmlstr, strlen(xmlstr)) != IKS_OK)
+		ret = iks_default_tls.send(data->tlsdata, xmlstr, strlen(xmlstr));
+		if(ret != IKS_OK)
 			return IKS_NET_RWERR;
 	}
 	else
 	{
 		ret = data->trans->send(data->sock, xmlstr, strlen(xmlstr));
-		if(ret) return ret;
+		if(ret != IKS_OK)
+			return IKS_NET_RWERR;
 	}
-	if(data->logHook) data->logHook(data->user_data, xmlstr, strlen(xmlstr), 0);
+
+	if(data->logHook)
+		data->logHook(data->user_data, xmlstr, strlen(xmlstr), 0);
+
 	return IKS_OK;
 }
 
