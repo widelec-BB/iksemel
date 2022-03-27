@@ -15,15 +15,24 @@ char *iks_base64_decode(const char *buf, size_t *dec_len)
 {
 	char *res, *save;
 	char val;
-	const char *foo;
-	const char *end;
+	const char *foo, *end;
 	int index;
-	size_t len;
+	size_t len, input_len;
 
 	if(!buf)
 		return NULL;
 
-	len = iks_strlen(buf) * 6 / 8 + 1;
+	input_len = iks_strlen(buf);
+
+	len = input_len * 6 / 8;
+	end = &buf[input_len - 1];
+	while(*end-- == '=')
+		len--;
+
+	if(dec_len)
+		*dec_len = len;
+
+	len += 1; /* \0 padding */
 
 	save = res = iks_malloc(len);
 	if(!save)
@@ -60,9 +69,6 @@ char *iks_base64_decode(const char *buf, size_t *dec_len)
 		index %= 4;
 	}
 	*res = 0;
-
-	if(dec_len)
-		*dec_len = res - save - 2;
 
 	return save;
 }
